@@ -1,0 +1,110 @@
+---
+title: "Chapter 2 Small Worlds and  Large Worlds"
+output: html_notebook
+---
+
+# Libraries
+
+```{r}
+library(rethinking)
+library(tidyverse)
+```
+
+# Exercises
+
+## 2H1
+
+**Question**
+
+![](https://i.ibb.co/bLJJ8mr/2H1.png)
+
+
+**Solution**
+
+Attempt 1:
+
+![](https://i.ibb.co/7tZjF7x/workings.png)
+
+```{r}
+0.1 * 0.5 + 0.2 * 0.5
+```
+
+Attempt 2:
+
+Utility functions:
+
+```{r}
+get_species <- function() {
+  is.A <- rbern(1, prob = 0.5)
+  species <- if (is.A)
+    "A"
+  else
+    "B"
+  
+  return(species)
+}
+
+
+get_twin_birth_rate <- function(species) {
+  twin_birth_rate <- if (species == "A")
+    0.1
+  else
+    0.2
+  
+  return(twin_birth_rate)
+}
+
+simulate_birth <- function(twin_birth_rate) {
+  is.twin <- rbern(1, prob = twin_birth_rate)
+  outcome <- if (is.twin)
+    "twins"
+  else
+    "singleton"
+  
+  return(outcome)
+}
+
+generate_obs <- function() {
+  species <- get_species()
+  twins_birth_rate <- get_twin_birth_rate(species)
+  
+  birth_1 <- simulate_birth(twins_birth_rate)
+  birth_2 <- simulate_birth(twins_birth_rate)
+  
+  obs <- tibble(species=species, birth1=birth_1, birth2=birth_2)
+  
+  return(obs)
+}
+
+
+```
+
+Generate a dataset:
+
+```{r}
+N <- 100000
+
+df <- N %>%
+  rerun(generate_obs()) %>%
+  bind_rows()
+
+df
+```
+
+Calculate the probability:
+
+```{r}
+denom <- df %>%
+  filter(birth1 == 'twins') %>%
+  count %>%
+  pull
+
+num <- df %>%
+  filter(birth2 == 'twins' & birth1 == 'twins') %>%
+  count %>%
+  pull
+
+num/denom
+```
+
+
